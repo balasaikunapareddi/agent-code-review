@@ -124,7 +124,11 @@ the same schema, so the full loop is testable offline.
   precision 1.000 across the board, severity accuracy 1.000. The
   off-by-one is the honest argument for the LLM layer: live mode is
   expected to catch it, and the benchmark will tell you whether it
-  did.
+  did. **Live-verified (Gemini free tier, `gemini-3.5-flash-lite`):
+  the live reviewer caught the off-by-one** — `items[len(items)]`
+  flagged as an IndexError major with the `items[-1]` fix — taking
+  buggy-PR recall to 7/7, with the static findings merged in and
+  the debug print still suppressed by policy.
 - **Inline-comment output.** Findings render as
   `file:line — [severity] message` with a suggestion, blocking
   findings first — the shape a forge's review API consumes.
