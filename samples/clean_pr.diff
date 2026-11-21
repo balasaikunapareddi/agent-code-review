@@ -1,0 +1,32 @@
+diff --git a/app/weather.py b/app/weather.py
+index 44a2eb9..65a0e58 100644
+--- a/app/weather.py
++++ b/app/weather.py
+@@ -1 +1,27 @@
+ """Weather lookup helpers."""
++
++import os
++
++import requests
++
++API_BASE = "https://api.example.com/weather"
++
++
++def fetch_weather(city: str, timeout: float = 10.0) -> dict:
++    """Fetch current weather for a city. Raises on HTTP errors."""
++    api_key = os.environ["WEATHER_API_KEY"]
++    response = requests.get(
++        API_BASE,
++        params={"q": city, "key": api_key},
++        timeout=timeout,
++    )
++    response.raise_for_status()
++    return response.json()
++
++
++def summarize(payload: dict) -> str:
++    try:
++        temp = payload["main"]["temp"]
++    except (KeyError, TypeError):
++        return "Weather unavailable."
++    return f"Current temperature: {temp}C"

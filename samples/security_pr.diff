@@ -1,0 +1,19 @@
+diff --git a/app/auth.py b/app/auth.py
+index 3cfddbf..8cabda3 100644
+--- a/app/auth.py
++++ b/app/auth.py
+@@ -1,7 +1,13 @@
+ """Authentication helpers."""
+ 
++AWS_ACCESS_KEY_ID = "AKIAQ7X2M9PL4RD8KZ3W"
++
+ 
+ def find_user(conn, username):
+     cursor = conn.cursor()
+-    cursor.execute("SELECT * FROM users WHERE name = ?", (username,))
++    cursor.execute("SELECT * FROM users WHERE name = '" + username + "'")
+     return cursor.fetchone()
++
++
++def apply_discount_rule(rule_text):
++    return eval(rule_text)

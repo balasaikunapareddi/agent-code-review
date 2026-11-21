@@ -1,0 +1,45 @@
+diff --git a/app/orders.py b/app/orders.py
+index 5646d99..22650d3 100644
+--- a/app/orders.py
++++ b/app/orders.py
+@@ -3,8 +3,39 @@
+ import requests
+ 
+ ORDERS_API = "https://orders.internal.example.com"
++API_KEY = "sk-9f8e7d6c5b4a3210fedcba987654"
+ 
+ 
+ def fetch_order(order_id):
+-    resp = requests.get(f"{ORDERS_API}/orders/{order_id}", timeout=10)
++    resp = requests.get(f"{ORDERS_API}/orders/{order_id}")
+     return resp.json()
++
++
++def add_item(order, items=[]):
++    items.append(order)
++    return items
++
++
++def find_orders(conn, customer_id):
++    cursor = conn.cursor()
++    cursor.execute(f"SELECT * FROM orders WHERE customer_id = {customer_id}")
++    return cursor.fetchall()
++
++
++def parse_amount(raw):
++    try:
++        return float(raw)
++    except:
++        return 0.0
++
++
++def last_item(items):
++    return items[len(items)]
++
++
++# TODO: add pagination here
++def list_orders(conn):
++    print("listing orders")
++    cursor = conn.cursor()
++    cursor.execute("SELECT * FROM orders")
++    return cursor.fetchall()
