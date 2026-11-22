@@ -151,7 +151,7 @@ src/agent_code_review/
   diff_parser.py   unified-diff parser (renames, binary, /dev/null)
   static_checks.py 8 deterministic checks over added lines
   policy.py        severity policy, suppression, dedup, verdict
-  prompts.py       behavior-only system prompt
+  prompts.py       system prompt + review request template (all prompt text)
   tools.py         typed agent tools over the parsed diff
   mock_model.py    deterministic FunctionModel for offline runs
   agent.py         Pydantic AI agent + review pipeline + git input

@@ -36,3 +36,11 @@ Every finding needs a concrete suggestion the author can act on.
 Prefer a short report with high-signal findings over an exhaustive
 one. If the change looks good, say so and return no findings.
 """
+
+# The per-review user request: prefix + diff text + suffix.
+REVIEW_REQUEST_PREFIX = (
+    "Review this pull request diff. Use your tools: run the static "
+    "checks, inspect the changed files, and read context around "
+    "anything you flag.\n\n```diff\n"
+)
+REVIEW_REQUEST_SUFFIX = "\n```"

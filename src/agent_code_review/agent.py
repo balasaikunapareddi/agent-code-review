@@ -27,7 +27,7 @@ from .diff_parser import diff_stats, parse_diff
 from .mock_model import build_mock_model
 from .models import Finding, ReviewReport
 from .policy import DEFAULT_CONFIDENCE_THRESHOLD, PolicyResult, apply_policy
-from .prompts import SYSTEM_PROMPT
+from .prompts import REVIEW_REQUEST_PREFIX, REVIEW_REQUEST_SUFFIX, SYSTEM_PROMPT
 from .static_checks import run_static_checks
 from .tools import (
     ReviewDeps,
@@ -112,18 +112,15 @@ def review_diff(
     diff_text: str,
     live: bool = False,
     confidence_threshold: float = DEFAULT_CONFIDENCE_THRESHOLD,
+    agent: Agent | None = None,
 ) -> ReviewResult:
     """Review a unified diff end to end and return the policy-filtered result."""
     files = parse_diff(diff_text)
     deps = ReviewDeps(diff_text=diff_text, files=files)
     static_findings = run_static_checks(files)
 
-    agent = build_agent(live=live)
-    prompt = (
-        "Review this pull request diff. Use your tools: run the static "
-        "checks, inspect the changed files, and read context around "
-        "anything you flag.\n\n```diff\n" + diff_text + "\n```"
-    )
+    agent = agent if agent is not None else build_agent(live=live)
+    prompt = REVIEW_REQUEST_PREFIX + diff_text + REVIEW_REQUEST_SUFFIX
     run = agent.run_sync(prompt, deps=deps)
     agent_report: ReviewReport = run.output
 
@@ -167,3 +164,46 @@ def review_repo(
         live=live,
         confidence_threshold=confidence_threshold,
     )
+
+
+class CodeReviewerAgent:
+    """The code-review agent: a Pydantic AI agent inside the review pipeline.
+
+    Construct with a model mode (deterministic mock by default; live
+    Gemini when ``live=True``) and a confidence threshold, then call
+    :meth:`review` with diff text or :meth:`review_repo` with a git ref
+    range. The underlying agent is built by :func:`build_agent` — system
+    prompt in ``prompts.py``, typed tools over the parsed diff — and
+    everything after the model runs (merge, dedup, confidence
+    suppression, severity policy, verdict) is deterministic code in
+    :func:`review_diff`.
+    """
+
+    def __init__(
+        self,
+        live: bool = False,
+        confidence_threshold: float = DEFAULT_CONFIDENCE_THRESHOLD,
+    ):
+        self.live = live
+        self.confidence_threshold = confidence_threshold
+        self.agent = build_agent(live=live)
+
+    def review(self, diff_text: str) -> ReviewResult:
+        """Review a unified diff and return the policy-filtered result."""
+        return review_diff(
+            diff_text,
+            live=self.live,
+            confidence_threshold=self.confidence_threshold,
+            agent=self.agent,
+        )
+
+    def review_repo(
+        self, repo_path: str, ref_range: str = "HEAD~1..HEAD"
+    ) -> ReviewResult:
+        """Review the diff of a ref range in a local git repository."""
+        return review_diff(
+            get_git_diff(repo_path, ref_range),
+            live=self.live,
+            confidence_threshold=self.confidence_threshold,
+            agent=self.agent,
+        )
